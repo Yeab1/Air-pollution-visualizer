@@ -1,0 +1,149 @@
+---
+title: "Yeab Final project data retrieval"
+output: html_notebook
+---
+
+get libraries
+```{r}
+library(htmltools)
+library(tidyverse)
+library(dplyr)
+library(jsonlite)
+library(RCurl)
+library(httr)
+```
+
+read the world cities database
+
+```{r}
+world <- read_csv("worldcitiespop.csv")
+View(world)
+```
+
+
+clean the world dataset to a suitable form.
+
+```{r}
+cleanWorld <- world %>% mutate_at(vars(Latitude, Longitude), funs(round(., 2))) %>% select(City, Latitude, Longitude) %>% distinct(Latitude, Longitude, .keep_all = T)
+```
+
+```{r}
+# function to get the the air quality index from the dataset.
+getInfo <- function(latAndLong){
+  
+  res = GET("https://api.waqi.info/feed/geo:50.6;1.7/?token=a05ec1d3224ccd890d869a35def249e35f6b9350")
+  data = fromJSON(rawToChar(res$content))
+  return(data$data$aqi)
+}
+```
+
+Make API calls and retrieve air quality indexes into the data.
+```{r}
+latAndLong <- cleanWorld %>% select(Latitude, Longitude)
+aqi <- apply(latAndLong, 1, getInfo)
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
