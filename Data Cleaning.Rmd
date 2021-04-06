@@ -1,7 +1,12 @@
 ---
-title: "Yeab Final project data retrieval"
+title: "Yeab Final project data retrieval and cleaning"
 output: html_notebook
 ---
+
+===============================================
+This script creates a data set with a certain amount of cities as records along with their air quality indices.
+The number of records in the exported data set is dictated by the limit variable and contains the top "limit" records based on the number of population in the cities.
+===============================================
 
 get libraries
 ```{r}
@@ -16,40 +21,51 @@ library(httr)
 read the world cities database
 
 ```{r}
-world <- read_csv("worldcitiespop.csv")
+world <- read_csv("worldcities.csv")
 View(world)
 ```
 
 
-clean the world dataset to a suitable form.
-
+Clean the world data set to a suitable form.
 ```{r}
-cleanWorld <- world %>% mutate_at(vars(Latitude, Longitude), funs(round(., 2))) %>% select(City, Latitude, Longitude) %>% distinct(Latitude, Longitude, .keep_all = T)
+limit = 100
+cleanWorld <- world %>% arrange(desc(population)) %>% head(limit) %>% select(city, lat, lng)%>% distinct(lat, lng, .keep_all = T)
 ```
 
 ```{r}
 # function to get the the air quality index from the dataset.
 getInfo <- function(latAndLong){
-  
-  res = GET("https://api.waqi.info/feed/geo:50.6;1.7/?token=a05ec1d3224ccd890d869a35def249e35f6b9350")
+  lat = latAndLong[2]
+  long = latAndLong[3]
+  url = paste("https://api.waqi.info/feed/geo:",lat,";",long,"/?token=a05ec1d3224ccd890d869a35def249e35f6b9350", sep = "")
+  res = GET(url)
   data = fromJSON(rawToChar(res$content))
+  if(data$status != "ok"){
+    return("N/A")
+  }
   return(data$data$aqi)
 }
 ```
 
 Make API calls and retrieve air quality indexes into the data.
 ```{r}
-latAndLong <- cleanWorld %>% select(Latitude, Longitude)
-aqi <- apply(latAndLong, 1, getInfo)
-
+aqi <- as.numeric(apply(cleanWorld, 1, getInfo))
 ```
 
 
 
 ```{r}
-
+summary(aqi)
 ```
 
+Merge the air quality indices retrieved to the cleanWorld data set.
+```{r}
+cleanWorld$aqi <- aqi
+```
+Export the final csv file as "CleanData.csv".
+```{r}
+write.csv(cleanWorld,"CleanData.csv", row.names = TRUE)
+```
 
 
 
