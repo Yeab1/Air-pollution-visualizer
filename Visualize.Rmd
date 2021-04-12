@@ -1,0 +1,62 @@
+---
+title: "Yeabsira Part 2"
+output: flexdashboard::flex_dashboard
+runtime: shiny
+---
+
+```{r}
+library(shiny)
+library(htmltools)
+library(nycflights13)
+library(dplyr)
+library(tidyverse)
+library(jsonlite)
+library(RCurl)
+library(httr)
+library(leaflet)
+```
+
+```{r}
+world <- read_csv("cleanData.csv")
+```
+
+Column {data-width=600}
+-------------------------------------
+    
+### Component 1
+    
+```{r}
+
+pal <- colorNumeric(
+  palette = colorRampPalette(c('red', 'green'))(length(world$aqi)), 
+  domain = world$aqi)
+
+leaflet() %>%
+  setView(lat = 0, lng = 0, zoom = 2) %>% 
+  addTiles() %>%
+  addCircleMarkers(
+    lat = world$lat,
+    lng = world$lng,
+    color = pal(world$aqi),
+    stroke = FALSE, 
+    fillOpacity = 0.5,
+    popup = world$aqi
+  )
+
+```
+   
+Column {data-width=200}
+-------------------------------------
+   
+### Component 2
+
+```{r}
+summary(world$aqi)
+```   
+ 
+### Component 3
+    
+```{r}
+
+```
+
