@@ -22,26 +22,26 @@ read the world cities database
 
 ```{r}
 world <- read_csv("worldcities.csv")
-View(world)
 ```
 
 
 Clean the world data set to a suitable form.
 ```{r}
-limit = 100
+limit = 400
 cleanWorld <- world %>% arrange(desc(population)) %>% head(limit) %>% select(city, lat, lng)%>% distinct(lat, lng, .keep_all = T)
 ```
 
 ```{r}
-# function to get the the air quality index from the dataset.
+# function to get the the air quality index from the data set.
 getInfo <- function(latAndLong){
   lat = latAndLong[2]
   long = latAndLong[3]
   url = paste("https://api.waqi.info/feed/geo:",lat,";",long,"/?token=a05ec1d3224ccd890d869a35def249e35f6b9350", sep = "")
+  print(url)
   res = GET(url)
   data = fromJSON(rawToChar(res$content))
   if(data$status != "ok"){
-    return("N/A")
+    return(NA)
   }
   return(data$data$aqi)
 }
@@ -61,10 +61,11 @@ summary(aqi)
 Merge the air quality indices retrieved to the cleanWorld data set.
 ```{r}
 cleanWorld$aqi <- aqi
+cleanWorldNoNA <- cleanWorld %>% drop_na(aqi)
 ```
 Export the final csv file as "CleanData.csv".
 ```{r}
-write.csv(cleanWorld,"CleanData.csv", row.names = TRUE)
+write.csv(cleanWorldNoNA,"CleanData.csv", row.names = TRUE)
 ```
 
 
