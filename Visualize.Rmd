@@ -1,5 +1,5 @@
 ---
-title: "Yeabsira Part 2"
+title: "AIR QUALITY VISUALIZATION"
 output: flexdashboard::flex_dashboard
 runtime: shiny
 ---
@@ -14,22 +14,45 @@ library(jsonlite)
 library(RCurl)
 library(httr)
 library(leaflet)
+library(shinyWidgets)
 ```
 
 ```{r}
 world <- read_csv("cleanData.csv")
 ```
 
+```{r}
+# function to classify air quality indices.
+classify <- function(aqi){
+  if(aqi < 50){
+    return("Green")
+  }
+  if(aqi < 100){
+    return("yellow")
+  }
+  if(aqi < 150){
+    return("orange")
+  }
+  if(aqi < 200){
+    return("red")
+  }
+  if(aqi < 300){
+    return("purple")
+  }
+  if(aqi < 300){
+    return("black")
+  }
+}
+aqiInterpretation <- lapply(world$aqi, classify)
+world$Interpretation <- aqiInterpretation
+```
+
 Column {data-width=600}
 -------------------------------------
     
-### Component 1
-    
-```{r}
+### Map
 
-pal <- colorNumeric(
-  palette = colorRampPalette(c('red', 'green'))(length(world$aqi)), 
-  domain = world$aqi)
+```{r}
 
 leaflet() %>%
   setView(lat = 0, lng = 0, zoom = 2) %>% 
@@ -37,10 +60,10 @@ leaflet() %>%
   addCircleMarkers(
     lat = world$lat,
     lng = world$lng,
-    color = pal(world$aqi),
+    color = world$Interpretation,
     stroke = FALSE, 
     fillOpacity = 0.5,
-    popup = world$aqi
+    popup = as.factor(world$aqi)
   )
 
 ```
@@ -48,15 +71,42 @@ leaflet() %>%
 Column {data-width=200}
 -------------------------------------
    
-### Component 2
+### Search
 
 ```{r}
-summary(world$aqi)
+  ui <- fluidPage(
+
+    searchInput(
+      inputId = "search", label = "Search By City",
+      placeholder = "Search...",
+      btnSearch = icon("search"),
+      btnReset = icon("remove"),
+      width = "450px"
+    ),
+    br(),
+    verbatimTextOutput(outputId = "res")
+  )
+
+  server <- function(input, output, session) {
+    
+    
+    output$res <- renderPrint({
+      url = paste("https://api.waqi.info/feed/",input$search,"/?token=a05ec1d3224ccd890d869a35def249e35f6b9350", sep = "")
+      dt = GET(url)
+      data = fromJSON(rawToChar(dt$content))
+      data$data$aqi
+
+    })
+    
+  }
+
+  shinyApp(ui = ui, server = server)
+
 ```   
  
-### Component 3
+### Legend
     
 ```{r}
-
+print("legend goes here")
 ```
 
