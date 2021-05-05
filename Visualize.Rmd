@@ -7,7 +7,6 @@ runtime: shiny
 ```{r}
 library(shiny)
 library(htmltools)
-library(nycflights13)
 library(dplyr)
 library(tidyverse)
 library(jsonlite)
@@ -47,7 +46,7 @@ aqiInterpretation <- lapply(world$aqi, classify)
 world$Interpretation <- aqiInterpretation
 ```
 
-Column {data-width=600}
+Column {data-width=500}
 -------------------------------------
     
 ### Map
@@ -75,13 +74,14 @@ Column {data-width=200}
 
 ```{r}
   ui <- fluidPage(
-
     searchInput(
+     
       inputId = "search", label = "Search By City",
       placeholder = "Search...",
       btnSearch = icon("search"),
       btnReset = icon("remove"),
       width = "450px"
+      
     ),
     br(),
     verbatimTextOutput(outputId = "res")
@@ -94,19 +94,36 @@ Column {data-width=200}
       url = paste("https://api.waqi.info/feed/",input$search,"/?token=a05ec1d3224ccd890d869a35def249e35f6b9350", sep = "")
       dt = GET(url)
       data = fromJSON(rawToChar(dt$content))
-      data$data$aqi
-
+      cat(paste("Location: ", data$data$city$name, "\n", sep = ""))
+      cat(paste("   Aqi: ", data$data$aqi, "\n", sep = ""))
+      cat(paste("   PM 2.5: ", data$data$iaqi$pm25$v, "\n", sep = ""))
+      cat("Forecasts: \n")
+      o3 = toString(data$data$forecast$daily$o3[1])
+      o3 = substr(o3, 3, nchar(o3)-1)
+      o3List = strsplit(o3, ",")
+      pm25 = toString(data$data$forecast$daily$pm25[1])
+      pm25 = substr(pm25, 3, nchar(pm25)-1)
+      pmList = strsplit(pm25, ",")
+      cat(" O3 forcast \n")
+      cat(paste("  Tomorrow: ", as.list(as.numeric(unlist(o3List)))[1], "\n", sep = ""))
+      cat(paste("  After Tomorrow: ", as.list(as.numeric(unlist(o3List)))[2], "\n", sep = ""))
+      cat(paste("   Next 6 days: ", o3, "\n"))
+      cat(" PM 2.5 forcast \n")
+      cat(paste("  Tomorrow: ", as.list(as.numeric(unlist(pmList)))[1], "\n", sep = ""))
+      cat(paste("  After Tomorrow: ", as.list(as.numeric(unlist(pmList)))[2], "\n", sep = ""))
+      cat(paste("   Next 6 days: ", pm25))
     })
-    
   }
-
   shinyApp(ui = ui, server = server)
 
 ```   
+```{r}
+print("Hello World!")
+```
  
 ### Legend
     
-```{r}
-print("legend goes here")
+```{r picture, echo = F, fig.cap = "Data source: https://aqicn.org/map", out.width = '100%'}
+knitr::include_graphics("project/labels.png")
 ```
 
